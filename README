@@ -1,0 +1,233 @@
+NAME
+    Decision::Table - decisions made easy
+
+SYNOPSIS
+      use Decision::Table;
+
+        # A "complete" Decision::Table
+
+      my $dt = Decision::Table::Compact->new( 
+    
+          conditions =>
+          [
+           'drove too fast ?',
+           'comsumed alcohol ?',
+           'Police is making controls ?',
+          ],
+      
+          actions =>
+          [
+           'charged admonishment',         # 0
+           'drivers license cancellation', # 1
+           'nothing happened',             # 2
+          ],
+      
+          # expectation rule table
+      
+          rules =>
+          [
+           [ 1, 0, 1 ] => [ 0 ],
+           [ 1, 1, 1 ] => [ 0, 1 ],
+           [ 0, 0, 0 ] => [ 2 ],
+          ],
+      );
+
+      $dt->whatif( 1, 0, 1 );  # returns ( [ 0 ] )
+
+      $dt->whatif( 1, 1, 1 );  # returns ( [0, 1 ] )
+
+      $dt->decide( 0, 1, 0 );  # returns undef because no condition matches 
+
+      $dt->decide( 1, 1, 1 );  # dispatches action ( 0, 1 ) - here it just prints @$actions->[0, 1]
+
+      $dt->to_text;
+
+DESCRIPTION
+    When you have multiple conditions (i.e. if statements) which lead to
+    some sort of actions, you can use a decision table. It helps you to
+    dissect, organize and analyse your problem and keeps your code very
+    concise. Especially complex and nested if/else/elsif paragraphs can be
+    hard to mantain, understand and therefore predestinated to semantic and
+    syntactic errors. But this is not the only application for decision
+    tables, rather it can be utilized for various sorts of problems:
+    cellular automata (Wolfram type), markov believe networks, neuronal
+    networks and more.
+
+    This module supports the generation of:
+
+            - complete (totalistic)
+            - limited
+            - nested
+            - stochastic
+            - diagnosis score
+            - heuristic
+
+    decision tables. It also has some ability to analyse your decision table
+    and give hints about your design (<1>, which also inspired me to this
+    module and some examples).
+
+PROS AND CONS
+    The processing of a decision table can cost some cpu-overhead. The
+    decision table can be converted to static perl code, to solve this
+    problem. Because the static code cannot be automatically reverse
+    engineered (not yet, but hopefully in future). This would cost you some
+    flexibility in modifying the decision table in place.
+
+FAUNA AN FLORA OF DECISION TABLES
+    I personally differentiate between "action-oriented" and "categorizing"
+    decision tables.
+
+  "action-oriented" decision tables
+    Decision::Table::Conditions-dependently actions are taken to do
+    something. In the synopsis you see an example for this:
+
+            my $dt = Decision::Table->new(
+
+                    conditions =>
+                    [
+                            Decision::Table::Condition->new( text => 'drove too fast ?' ),
+                            Decision::Table::Condition->new( text => 'comsumed alcohol ?' ),
+                            Decision::Table::Condition->new( text => 'Police is making controls ?' ),
+                    ],
+
+                    actions =>
+                    [
+                            Decision::Table::Action->new( text => 'charged admonishment' ),                 # 0
+                            Decision::Table::Action->new( text => 'drivers license cancellation' ), # 1
+                            Decision::Table::Action->new( text => 'nothing happened' )                              # 2
+                    ],
+                            # Decision::Table::Conditions => Decision::Table::Actions
+
+                    rules =>
+                    [
+                            [ 1, 0, 1 ] => [ 0 ],
+                            [ 1, 1, 1 ] => [ 0, 1 ],
+                            [ 0, 0, 0 ] => [ 2 ],
+                    ],
+            );
+
+            $dt->analyse();
+
+  "categorizing" decision tables
+    Here we are making decisions about categorizing (classifying) something.
+    The "Decision::Table::Actions" are mainly more annotating something.
+
+            my $dtp = Decision::Table->new(
+
+                    conditions =>
+                    [
+                            Decision::Table::Condition->new( text => '$this->hairs eq "green"' ),
+                            Decision::Table::Condition->new( text => '$this->income > 10*1000' ),
+                            Decision::Table::Condition->new( text => '$this->shorts eq "dirty"' ),
+                    ],
+
+                    actions =>
+                    [
+                            Decision::Table::Action->new( text => '$this->name( "freak" );' ),
+                            Decision::Table::Action->new( text => '$this->name( "dumb" )' ),
+                            Decision::Table::Action->new( text => '$this->name( "geek" )' ),
+                            Decision::Table::Action->new( text => '$this->name( "<unknown>" )' ),
+                    ],
+
+                    rules =>
+                    [
+                            [ 1, 1, 1 ] => [ 2, 1 ],
+                            [ 0, 0, 1 ] => [ 1 ],
+                            [ 1, 0, 1 ] => [ 0 ],
+                            [ 0, 1, 1 ] => [ 0 ],
+                    ],
+
+                    else => [ 3 ],
+            );
+
+EXAMPLE "Decision::Table::Action-oriented" decisions
+        my $dt = Decision::Table::Partial->new(
+
+        conditions =>
+        [
+        Decision::Table::Condition->new( text => 'schnell gefahren ?' ),
+        Decision::Table::Condition->new( text => 'Alkohol getrunken ?' ),
+        Decision::Table::Condition->new( text => 'kontrolliert Polizei ?' ),
+        ],
+    
+        actions =>
+        [
+        Decision::Table::Action->new( text => 'gebuehrenpflichtige Verwarnung' ),
+        Decision::Table::Action->new( text => 'Fuehrerschein Entzug' ),
+        Decision::Table::Action->new( text => 'nichts geschieht' )
+        ],
+    
+        rules =>
+        [
+        [ 0, 1 ] => [ 0 ],
+        [ 1, 2 ] => [ 0, 1 ],
+        [ 0, 1, 2 ] => [ 2 ],
+        ],
+        );
+
+        $dt->to_text();
+
+EXAMPLE  "categorizing" decisions
+        my $dtp = Decision::Table::Partial->new(
+    
+        conditions =>
+        [
+        Decision::Table::Condition::WithCode->new( text => '$this->hairs eq "green"', cref => sub { $_[0]->hairs eq "green" } ),
+        Decision::Table::Condition::WithCode->new( text => '$this->income > 10*1000', cref => sub { $_[0]->income > 10*1000 } ),
+        Decision::Table::Condition::WithCode->new( text => '$this->shorts eq "dirty"', cref => sub { $_[0]->shorts eq "dirty" } ),
+        ],
+    
+        actions =>
+        [
+        Decision::Table::Action::WithCode->new( text => '$this->name( "freak" )', cref => sub { $_[0]->name( "freak" ) } ),
+        Decision::Table::Action::WithCode->new( text => '$this->name( "dumb" )', cref => sub { $_[0]->name( "dumb" ) } ),
+        Decision::Table::Action::WithCode->new( text => '$this->name( "geek" )', cref => sub { $_[0]->name( "geek" ) } ),
+        Decision::Table::Action::WithCode->new( text => '$this->name( "unknown" )', cref => sub { $_[0]->name( "unknown" ) } ),
+        ],
+    
+        rules =>
+        [
+         [ 0, 1, 2 ] => [ 2, 1 ],
+         [ 0, 2 ] => [ 1 ],
+         [ 0, 1 ] => [ 0 ],
+         [ 1, 2 ] => [ 0 ],
+        ],
+    
+        else => [ 3 ],
+        );
+	
+	use Class::Maker qw(class);
+
+        class 'Human',
+        {
+          public =>
+          {
+             string => [qw( hairs name shorts)],
+    
+             integer => [qw( income )],
+          },
+    
+          default =>
+          {
+             income => 0,
+          },
+        };
+
+        my $this = Human->new( hairs => 'green', shorts => 'dirty' );
+        
+        print Dumper [ $dtp->decide( $this ) ];
+
+        $this->income( 20*1000 );
+    
+        print Dumper [ $dtp->decide( $this ) ];
+
+AUTHOR
+    Murat Ünalan, <muenalan@cpan.org>
+
+SEE ALSO
+    Decision::Table::Diagnostic, Decision::Table::Wheighted
+
+REFERENCES
+    <1> Book (German): M. Rammè, "Entscheidungstabellen: Entscheiden mit
+    System" (Prentice Hall))
+

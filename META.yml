@@ -1,0 +1,28 @@
+--- #YAML:1.0
+name:               Decision-Table
+version:            0.02_02
+abstract:           decisions made easy
+author:
+    - Murat Uenalan <muenalan@cpan.org>
+license:            unknown
+distribution_type:  module
+configure_requires:
+    ExtUtils::MakeMaker:  0
+build_requires:
+    ExtUtils::MakeMaker:  0
+requires:
+    Class::Maker:     0
+    Data::Iter:       0
+    Generator::Perl:  0
+    IO::Extended:     0
+    Math::Matrix:     0
+    Perl::Tidy:       0
+    Tie::RefHash:     0
+no_index:
+    directory:
+        - t
+        - inc
+generated_by:       ExtUtils::MakeMaker version 6.54
+meta-spec:
+    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
+    version:  1.4

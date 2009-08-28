@@ -1,0 +1,9 @@
+Revision history for Perl extension Decision::Table.
+
+0.01  Sun Aug 25 15:37:08 2002
+	- original version; created by h2xs 1.21 with options
+		-n Decision::Table -X
+
+0.02_02
+     - TESTS: all pass. 
+     - MILESTONE: essentially all working.
